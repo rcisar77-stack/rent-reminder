@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  rent-reminder:
+    build: .
+    container_name: rent-reminder
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/usr/src/app/data
+    environment:
+      - PORT=3000
+      - NODE_ENV=production

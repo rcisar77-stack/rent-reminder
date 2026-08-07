@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rent Reminder — Self-Hosted Rent Tracking & Reminders</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <i class="fa-solid fa-building-user" style="color: var(--primary);"></i>
+      <span data-i18n="app_title">Rent Reminder</span>
+      <span class="badge" data-i18n="badge_selfhost">Self-Host</span>
+    </div>
+
+    <nav>
+      <button class="nav-btn active" data-tab="dashboard">
+        <i class="fa-solid fa-chart-pie"></i> <span data-i18n="nav_dashboard">Dashboard</span>
+      </button>
+      <button class="nav-btn" data-tab="tenants">
+        <i class="fa-solid fa-users"></i> <span data-i18n="nav_tenants">Tenants & Properties</span>
+      </button>
+      <button class="nav-btn" data-tab="settings">
+        <i class="fa-solid fa-gear"></i> <span data-i18n="nav_settings">Settings</span>
+      </button>
+      <button class="nav-btn" data-tab="logs">
+        <i class="fa-solid fa-clock-history"></i> <span data-i18n="nav_logs">Message Logs</span>
+      </button>
+    </nav>
+
+    <!-- LANGUAGE SELECTOR -->
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+      <i class="fa-solid fa-globe" style="color: var(--text-secondary);"></i>
+      <select id="language-selector" class="input" style="width: auto; padding: 0.4rem 0.6rem; font-size: 0.85rem; background: var(--bg-card);">
+        <option value="en">🇬🇧 English</option>
+        <option value="cs">🇨🇿 Čeština</option>
+        <option value="de">🇩🇪 Deutsch</option>
+        <option value="es">🇪🇸 Español</option>
+        <option value="fr">🇫🇷 Français</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main>
+
+    <!-- TAB 1: DASHBOARD -->
+    <section id="dashboard" class="tab-content active">
+      <div class="section-header">
+        <h1 class="section-title" data-i18n="dashboard_title">Rent & Payment Overview</h1>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+          <input type="month" id="month-selector" class="input" style="width: auto;">
+          <button class="btn btn-primary" id="btn-export-csv">
+            <i class="fa-solid fa-file-csv"></i> <span data-i18n="btn_export_csv">Export Overdue (CSV)</span>
+          </button>
+          <button class="btn" id="btn-run-scheduler-now" title="Check Due Dates Now">
+            <i class="fa-solid fa-rotate"></i> <span data-i18n="btn_check_due">Check Due Dates</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-title" data-i18n="stat_total_units">Total Units</span>
+          <span class="stat-value" id="stat-total-tenants">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-title" data-i18n="stat_paid">Paid</span>
+          <span class="stat-value paid" id="stat-paid-count">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-title" data-i18n="stat_pending">Pending</span>
+          <span class="stat-value pending" id="stat-pending-count">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-title" data-i18n="stat_overdue">Overdue</span>
+          <span class="stat-value overdue" id="stat-overdue-count">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-title" data-i18n="stat_expected_collected">Expected / Collected</span>
+          <span class="stat-value" id="stat-money" style="font-size: 1.3rem;">0 / 0 CZK</span>
+        </div>
+      </div>
+
+      <!-- PAYMENTS TABLE -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th data-i18n="th_tenant">Tenant</th>
+              <th data-i18n="th_property">Property</th>
+              <th data-i18n="th_rent">Rent Amount</th>
+              <th data-i18n="th_due_day">Due Day</th>
+              <th data-i18n="th_vs">Variable Symbol / Ref</th>
+              <th data-i18n="th_status">Status</th>
+              <th data-i18n="th_paid_date">Paid Date</th>
+              <th data-i18n="th_actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="dashboard-table-body">
+            <!-- Dynamic rows -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+
+    <!-- TAB 2: TENANTS & PROPERTIES -->
+    <section id="tenants" class="tab-content">
+      <div class="section-header">
+        <h1 class="section-title" data-i18n="nav_tenants">Tenants & Properties</h1>
+        <div style="display: flex; gap: 0.75rem;">
+          <button class="btn" id="btn-add-property">
+            <i class="fa-solid fa-plus"></i> <span data-i18n="btn_add_property">Add Property</span>
+          </button>
+          <button class="btn btn-primary" id="btn-add-tenant">
+            <i class="fa-solid fa-user-plus"></i> <span data-i18n="btn_add_tenant">Add Tenant</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- PROPERTIES SUMMARY -->
+      <div class="card" style="margin-bottom: 1.5rem;">
+        <div class="card-title"><i class="fa-solid fa-building"></i> <span data-i18n="card_properties_list">Properties List</span></div>
+        <div id="properties-list" style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+          <!-- Property badges -->
+        </div>
+      </div>
+
+      <!-- TENANTS TABLE -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th data-i18n="th_tenant">Tenant Name</th>
+              <th data-i18n="th_property">Property</th>
+              <th data-i18n="lbl_email">Email</th>
+              <th data-i18n="th_phone">Phone</th>
+              <th data-i18n="th_rent">Rent</th>
+              <th data-i18n="th_due_day">Due Day</th>
+              <th data-i18n="th_vs">Payment Reference</th>
+              <th data-i18n="th_active">Active</th>
+              <th data-i18n="th_actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tenants-table-body">
+            <!-- Dynamic tenant rows -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+
+    <!-- TAB 3: SETTINGS -->
+    <section id="settings" class="tab-content">
+      <div class="section-header">
+        <h1 class="section-title" data-i18n="nav_settings">Settings</h1>
+        <button class="btn btn-success" id="btn-save-settings">
+          <i class="fa-solid fa-floppy-disk"></i> <span data-i18n="btn_save_settings">Save Settings</span>
+        </button>
+      </div>
+
+      <form id="settings-form">
+        <!-- BANKING DETAILS -->
+        <div class="card">
+          <div class="card-title"><i class="fa-solid fa-piggy-bank"></i> <span data-i18n="card_bank_details">Landlord Bank Details</span></div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label data-i18n="lbl_bank_account">Account Number</label>
+              <input type="text" id="setting-bank_account" class="input" placeholder="e.g. 123456789">
+            </div>
+            <div class="form-group">
+              <label data-i18n="lbl_bank_code">Bank Code / Sort Code</label>
+              <input type="text" id="setting-bank_code" class="input" placeholder="e.g. 0800">
+            </div>
+            <div class="form-group">
+              <label data-i18n="lbl_bank_iban">IBAN (International)</label>
+              <input type="text" id="setting-bank_iban" class="input" placeholder="e.g. CZ6508000000000123456789">
+            </div>
+            <div class="form-group">
+              <label data-i18n="lbl_bank_swift">SWIFT / BIC Code</label>
+              <input type="text" id="setting-bank_swift" class="input" placeholder="e.g. GIBACZPX">
+            </div>
+          </div>
+        </div>
+
+        <!-- SMTP CONFIG -->
+        <div class="card">
+          <div class="card-title" style="justify-content: space-between;">
+            <span><i class="fa-solid fa-paper-plane"></i> <span data-i18n="card_smtp_details">Email Settings (SMTP Server)</span></span>
+            <button type="button" class="btn btn-sm" id="btn-test-smtp">
+              <i class="fa-solid fa-vial"></i> <span data-i18n="btn_test_smtp">Test SMTP Connection</span>
+            </button>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label data-i18n="lbl_smtp_host">SMTP Host</label>
+              <input type="text" id="setting-smtp_host" class="input" placeholder="e.g. smtp.gmail.com">
+            </div>
+            <div class="form-group">
+              <label data-i18n="lbl_smtp_port">SMTP Port</label>
+              <input type="number" id="setting-smtp_port" class="input" placeholder="587 or 465">
+            </div>
+            <div class="form-group">
+              <label data-i18n="lbl_smtp_from">Sender Email (From)</label>
+              <input type="email" id="setting-smtp_from" class="input" placeholder="landlord@domain.com">
+            </div>
+            <div class="form-group">
+              <label data-i18n="lbl_smtp_user">Username</label>
+              <input type="text" id="setting-smtp_user" class="input" placeholder="username">
+            </div>
+            <div class="form-group">
+              <label data-i18n="lbl_smtp_pass">Password</label>
+              <input type="password" id="setting-smtp_pass" class="input" placeholder="••••••••">
+            </div>
+          </div>
+        </div>
+
+        <!-- REMINDER RULES & TEMPLATES -->
+        <div class="card">
+          <div class="card-title"><i class="fa-solid fa-bell"></i> <span data-i18n="card_reminder_rules">Reminder Rules & Email Templates</span></div>
+          
+          <div class="form-grid" style="margin-bottom: 1.5rem;">
+            <div class="form-group">
+              <label data-i18n="lbl_days_before">Send 1st reminder (days BEFORE due date)</label>
+              <input type="number" id="setting-days_before_due" class="input" min="1" max="14">
+            </div>
+            <div class="form-group">
+              <label data-i18n="lbl_days_after">Send 2nd urgency notice (days AFTER due date)</label>
+              <input type="number" id="setting-days_after_due" class="input" min="1" max="30">
+            </div>
+          </div>
+
+          <div style="margin-bottom: 1rem;">
+            <label style="margin-bottom: 0.5rem; display: block;" data-i18n="lbl_available_vars">Click placeholder tags to insert into active template:</label>
+            <div id="placeholder-tags-container" style="display: flex; flex-wrap: wrap; gap: 0.3rem;"></div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label data-i18n="lbl_template_before">Email Template BEFORE Due Date</label>
+            <textarea id="setting-email_template_before" class="input" rows="8"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label data-i18n="lbl_template_after">Email Template AFTER Due Date (Overdue Notice)</label>
+            <textarea id="setting-email_template_after" class="input" rows="8"></textarea>
+          </div>
+        </div>
+
+        <!-- SOFTWARE VERSION & UPDATES -->
+        <div class="card">
+          <div class="card-title" style="justify-content: space-between;">
+            <span><i class="fa-solid fa-code-branch"></i> <span data-i18n="card_version_info">Software Version & Updates</span></span>
+            <button type="button" class="btn btn-sm" id="btn-check-updates-now">
+              <i class="fa-solid fa-arrows-rotate"></i> <span data-i18n="btn_check_updates">Check for Updates</span>
+            </button>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <span data-i18n="lbl_current_version">Installed Version</span>: <strong id="app-current-version">v1.0.1</strong>
+            </div>
+            <div id="version-check-result" style="color: var(--text-secondary); font-size: 0.9rem;"></div>
+          </div>
+        </div>
+      </form>
+    </section>
+
+
+    <!-- TAB 4: LOGS -->
+    <section id="logs" class="tab-content">
+      <div class="section-header">
+        <h1 class="section-title" data-i18n="nav_logs">Message Logs</h1>
+        <button class="btn" id="btn-refresh-logs">
+          <i class="fa-solid fa-arrows-rotate"></i> <span data-i18n="btn_refresh_logs">Refresh</span>
+        </button>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th data-i18n="th_sent_time">Sent Time</th>
+              <th data-i18n="th_tenant">Tenant</th>
+              <th>Period</th>
+              <th data-i18n="th_msg_type">Message Type</th>
+              <th data-i18n="th_recipient">Recipient Email</th>
+              <th data-i18n="th_delivery_status">Delivery Status</th>
+              <th data-i18n="th_error_detail">Detail / Error</th>
+            </tr>
+          </thead>
+          <tbody id="logs-table-body">
+            <!-- Dynamic logs -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- MODAL: ADD/EDIT TENANT -->
+  <div class="modal-backdrop" id="modal-tenant">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-tenant-title" data-i18n="modal_add_tenant">Add Tenant</h3>
+        <button class="close-btn" data-close="modal-tenant">&times;</button>
+      </div>
+      <form id="form-tenant">
+        <input type="hidden" id="tenant-id">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label data-i18n="lbl_full_name">Full Name *</label>
+          <input type="text" id="tenant-name" class="input" required placeholder="John Smith">
+        </div>
+        <div class="form-grid" style="margin-bottom: 1rem;">
+          <div class="form-group">
+            <label data-i18n="lbl_email">Email Address *</label>
+            <input type="email" id="tenant-email" class="input" required placeholder="john@example.com">
+          </div>
+          <div class="form-group">
+            <label data-i18n="lbl_phone">Phone Number</label>
+            <input type="text" id="tenant-phone" class="input" placeholder="+1 555 123 456">
+          </div>
+        </div>
+        <div class="form-grid" style="margin-bottom: 1rem;">
+          <div class="form-group">
+            <label data-i18n="lbl_property_unit">Property / Unit</label>
+            <select id="tenant-property_id" class="input"></select>
+          </div>
+          <div class="form-group">
+            <label data-i18n="lbl_rent_amount">Monthly Rent *</label>
+            <input type="number" id="tenant-rent_amount" class="input" required min="1" step="100" placeholder="1500">
+          </div>
+        </div>
+        <div class="form-grid" style="margin-bottom: 1rem;">
+          <div class="form-group">
+            <label data-i18n="lbl_currency">Currency</label>
+            <select id="tenant-currency" class="input">
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="GBP">GBP (£)</option>
+              <option value="CZK">CZK (Kč)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label data-i18n="lbl_due_day">Day of Month Due (1-28) *</label>
+            <input type="number" id="tenant-due_day" class="input" min="1" max="28" value="15" required>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 1.25rem; padding: 1rem;">
+          <label style="margin-bottom: 0.5rem; display: block;" data-i18n="lbl_vs_type">Payment Reference / Variable Symbol</label>
+          <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 0.75rem;">
+            <label><input type="radio" name="tenant-vs_type" value="auto" checked> <span data-i18n="opt_vs_auto">Auto-generate (YYYYMM + ID)</span></label>
+            <label><input type="radio" name="tenant-vs_type" value="custom"> <span data-i18n="opt_vs_custom">Custom Fixed Reference / VS</span></label>
+          </div>
+          <input type="text" id="tenant-custom_vs" class="input" placeholder="Enter custom reference code" style="display: none;">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" class="btn" data-close="modal-tenant" data-i18n="btn_cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" data-i18n="btn_save_tenant">Save Tenant</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- MODAL: ADD PROPERTY -->
+  <div class="modal-backdrop" id="modal-property">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" data-i18n="modal_add_property">Add Property</h3>
+        <button class="close-btn" data-close="modal-property">&times;</button>
+      </div>
+      <form id="form-property">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label data-i18n="lbl_property_name">Property / Unit Name *</label>
+          <input type="text" id="property-name" class="input" required placeholder="e.g. Apt 4B Main St">
+        </div>
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label data-i18n="lbl_address_note">Address / Notes</label>
+          <input type="text" id="property-address" class="input" placeholder="123 Main Street, Apt 4B">
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" class="btn" data-close="modal-property" data-i18n="btn_cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" data-i18n="btn_save_property">Save Property</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

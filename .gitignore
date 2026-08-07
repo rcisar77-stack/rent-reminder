@@ -1,0 +1,16 @@
+node_modules/
+*.sqlite
+*.sqlite3
+*.db
+.env
+*.log
+data/
+rent-reminder.md
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+ 

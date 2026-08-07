@@ -1,0 +1,9 @@
+node_modules
+data
+.git
+.gitignore
+*.log
+README.md
+SUMMARY.md
+rent-reminder.md
+LICENSE

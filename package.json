@@ -1,0 +1,29 @@
+{
+  "name": "rent-reminder",
+  "version": "1.0.1",
+  "description": "Self-hosted rent tracking and automated email reminders for landlords",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "keywords": [
+    "rent",
+    "reminder",
+    "landlord",
+    "self-hosted",
+    "property-management"
+  ],
+  "author": "",
+  "license": "SEE LICENSE IN LICENSE",
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.10.0"
+  }
+}
