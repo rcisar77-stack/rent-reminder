@@ -4,7 +4,7 @@ FROM node:20-alpine
 WORKDIR /usr/src/app
 
 # Install build dependencies for better-sqlite3
-RUN apk add --no-allowed-untrusted --no-cache python3 make g++
+RUN apk add --no-cache python3 make g++
 
 # Copy package files
 COPY package*.json ./
