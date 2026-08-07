@@ -62,6 +62,33 @@
 
 ---
 
+## 🧩 First Steps After Launch
+
+1. **Configure SMTP & Bank Details:** Go to the **Settings** tab to enter your SMTP email provider credentials and bank account info.
+2. **Add Properties & Tenants:** Open the **Properties & Tenants** tab to create your units, set rent amounts, due days, and payment reference types.
+3. **Autopilot Operation:** Rent Reminder runs automatically on a daily cron schedule to check due dates and send pre-due reminders or overdue notices.
+
+---
+
+## 💾 Data Persistence & Safety
+
+- All data (tenants, properties, payment history, settings) is stored locally in an embedded **SQLite database** (`./data/rent_reminder.db`).
+- In Docker deployments, the `./data` directory is mounted as a persistent volume, ensuring your data is safely retained across container restarts or image updates.
+
+---
+
+## 🌍 Supported Languages (i18n)
+
+Rent Reminder supports instant UI and email template switching across 5 languages:
+- 🇬🇧 **English** (Default)
+- 🇨🇿 **Czech**
+- 🇩🇪 **German**
+- 🇪🇸 **Spanish**
+- 🇫🇷 **French**
+
+
+---
+
 ## 🧪 Testing
 
 To run automated unit tests:
