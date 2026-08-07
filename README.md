@@ -29,7 +29,22 @@
 
 ## 🚀 Quickstart
 
-### Option A: Docker Compose (Recommended)
+### Option A: Prebuilt Docker Container (Fastest)
+
+Run directly via Docker without cloning:
+```bash
+docker run -d \
+  --name rent-reminder \
+  -p 3000:3000 \
+  -v ./data:/app/data \
+  --restart unless-stopped \
+  ghcr.io/rcisar77-stack/rent-reminder:latest
+```
+Open in browser: **`http://localhost:3000`**
+
+---
+
+### Option B: Docker Compose (Source Build)
 
 1. Clone the repository:
    ```bash
@@ -46,7 +61,7 @@
 
 ---
 
-### Option B: Direct Node.js Installation
+### Option C: Direct Node.js Installation
 
 1. Install dependencies:
    ```bash
